@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Assumed data model:
+    // users/{uid}/appData/main stores one JSON payload string (<= 300,000 chars)
+    // containing { plans: [...], tasks: [...] }, plus a server updatedAt timestamp.
+    // The document path scopes each user's private workspace to their Firebase UID.
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data)
+        || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data)
+        || request.resource.data.uid == resource.data.uid;
+    }
+
+    function isValidAppData() {
+      return request.resource.data.keys().hasAll(['payload', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['payload', 'updatedAt'])
+        && request.resource.data.payload is string
+        && request.resource.data.payload.size() <= 300000
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /users/{userId}/appData/{documentId} {
+      allow get: if documentId == 'main' && isDocOwner(userId);
+      allow create: if documentId == 'main'
+        && isOwner(userId)
+        && uidUnchanged()
+        && isValidAppData();
+      allow update: if documentId == 'main'
+        && isOwner(userId)
+        && uidNotModified()
+        && isValidAppData();
+      allow delete: if false;
+    }
+  }
+}
