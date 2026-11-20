@@ -41,7 +41,7 @@ $('#planForm').onsubmit=e=>{e.preventDefault();let id=$('#planId').value,old=dat
 </script><script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
-const firebaseConfig = window.firebaseConfig;
+
 const gate=document.getElementById('authGate'), appRoot=document.querySelector('.app'), btn=document.getElementById('googleSignIn'), err=document.getElementById('authError');
 const firebaseConfig = window.firebaseConfig;
 function lock(message){gate.hidden=false;appRoot.inert=true;appRoot.setAttribute('aria-hidden','true');if(message){err.textContent=message;err.hidden=false}}
